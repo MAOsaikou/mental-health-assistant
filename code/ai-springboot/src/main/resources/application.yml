@@ -1,0 +1,65 @@
+spring:
+  config:
+    # 只加载项目根目录的本地配置；真实密钥由环境变量/部署平台 Secret 注入，不打进 JAR。
+    import: optional:file:./application-local.yml
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/mental_health_assistant?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai}
+    username: ${DB_USERNAME:root}
+    # 不提供默认密码，避免开发配置被误用于生产环境；请通过环境变量或 application-local.yml 设置。
+    password: ${DB_PASSWORD:}
+  flyway:
+    enabled: true
+    # 兼容已有业务表但尚未由 Flyway 管理的数据库；基线为 V1，随后执行本项目的 V2 升级。
+    baseline-on-migrate: true
+    baseline-version: 1
+  jackson:
+    time-zone: Asia/Shanghai
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
+  ai:
+    openai:
+      # 仅用于平台免费额度。用户自己的 Key 在网页「我的」里填写，存数据库，不走环境变量。
+      # 不配也能启动：没填自己 Key 的用户会提示去「我的」里填写。
+      api-key: ${DEEPSEEK_API_KEY:not-configured}
+      base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: deepseek-chat
+
+server:
+  port: ${SERVER_PORT:8080}
+
+jwt:
+  # 生产环境必须设置 JWT_SECRET（至少 32 位随机字符串）。
+  # 未设置时首次启动会生成本机密钥文件并在后续启动中复用，仅适合本地开发。
+  secret: ${JWT_SECRET:}
+  # 访问令牌 30 分钟；刷新令牌 7 天并使用 HttpOnly Cookie 轮换。
+  expiration: 1800000
+  refresh-expiration: 604800000
+  header: Authorization
+  token-prefix: "Bearer "
+  # 本地开发自动生成并复用；目录已被 .gitignore 排除。生产环境应设置 JWT_SECRET。
+  local-secret-file: ${JWT_LOCAL_SECRET_FILE:.data/jwt-secret.key}
+
+xiaoguang:
+  free-chat-limit: 20
+
+file:
+  upload-dir: ${FILE_UPLOAD_DIR:./uploads}
+
+app:
+  cors:
+    # 本地允许 Vite 任意端口（5173 被占用时会跳到 5174/5175）。生产环境用 CORS_ALLOWED_ORIGINS 配实际域名。
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:*,http://127.0.0.1:*}
+  security:
+    # 用于加密数据库里用户填写的 API Key。不配会自动生成本地密钥文件，用户无需设置环境变量。
+    api-key-enc-secret: ${API_KEY_ENC_SECRET:}
+    # HTTPS 生产环境必须设置为 true；本地 http 开发保持 false。
+    refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:false}
+    # 仅当应用只可经由可信反向代理访问时设为 true，否则客户端可伪造来源 IP 绕过限流。
+    trust-proxy-headers: ${TRUST_PROXY_HEADERS:false}
+  ai:
+    # 用户自定义模型地址只允许这些域名，防止请求打到内网
+    allowed-base-hosts: ${AI_ALLOWED_BASE_HOSTS:api.deepseek.com,api.openai.com,dashscope.aliyuncs.com,api.moonshot.cn,open.bigmodel.cn,api.siliconflow.cn}

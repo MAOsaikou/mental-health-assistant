@@ -1,0 +1,31 @@
+# Workspace metadata and recoverable nested-repository backups
+.idea/
+.git-metadata-backup/
+
+# Generated dependency and build output (nested projects also define their own rules)
+**/node_modules/
+**/dist/
+**/target/
+**/.next/
+**/.vinext/
+**/.wrangler/
+
+# Local credentials and runtime data
+**/.data/
+**/application-local.yml
+**/uploads/
+**/.env
+**/.env.*
+!**/.env.example
+**/*.pem
+**/*.key
+**/*.p12
+**/*.pfx
+**/*.jks
+**/*.keystore
+**/*.sqlite
+**/*.sqlite3
+**/*.db
+
+# Generated archive from the legacy site workspace
+site/.openai/*.tar.gz
